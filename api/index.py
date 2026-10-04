@@ -9,11 +9,9 @@ import hashlib
 app = Flask(__name__)
 CORS(app)
 
-# Default public guest instance
 yt_guest = YTMusic(language="hi", location="IN")
 
 def generate_sapisid_hash(sapisid, origin="https://music.youtube.com"):
-    """YouTube authentication ke liye SAPISIDHASH signature calculate karta hai."""
     timestamp = str(int(time.time()))
     sha1 = hashlib.sha1(f"{timestamp} {sapisid} {origin}".encode('utf-8')).hexdigest()
     return f"SAPISIDHASH {timestamp}_{sha1}"
@@ -23,23 +21,28 @@ def get_yt_client():
 
     if raw_cookie:
         try:
-            # 1. Cookie string se individual cookies parse karna
             cookie_dict = {}
             for item in raw_cookie.split(";"):
                 if "=" in item:
                     k, v = item.strip().split("=", 1)
                     cookie_dict[k.strip()] = v.strip()
 
-            # 2. SAPISID ya __Secure-3PAPISID find karna
-            sapisid = cookie_dict.get("SAPISID") or cookie_dict.get("__Secure-3PAPISID") or cookie_dict.get("__Secure-1PAPISID")
+            sapisid = (
+                cookie_dict.get("SAPISID") or 
+                cookie_dict.get("__Secure-3PAPISID") or 
+                cookie_dict.get("__Secure-1PAPISID")
+            )
+
+            client_ua = request.headers.get("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
             headers_dict = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "User-Agent": client_ua,
                 "Accept": "*/*",
                 "Accept-Language": "hi,en-IN;q=0.9,en;q=0.8",
                 "Content-Type": "application/json",
                 "X-Origin": "https://music.youtube.com",
                 "Origin": "https://music.youtube.com",
+                "X-Goog-AuthUser": "0",
                 "Cookie": raw_cookie
             }
 
@@ -48,7 +51,7 @@ def get_yt_client():
 
             return YTMusic(auth=json.dumps(headers_dict), language="hi", location="IN")
         except Exception as e:
-            print("Auth Initialization Error:", e)
+            print("Auth Setup Error:", e)
 
     return yt_guest
 
@@ -80,21 +83,68 @@ def parse_item(item):
         return {"id": bid, "title": item.get("title", ""), "subtitle": artist_name, "thumbnail": thumb, "type": itype}
     return None
 
-# Root / Docs UI
 @app.route("/")
 @app.route("/index")
 def index():
     return jsonify({
         "status": "online",
-        "message": "YT Music Suite API with SAPISIDHASH Auto-Signer",
-        "endpoints": {
-            "public": ["/api/home/full", "/api/charts", "/api/regional", "/api/album", "/api/artist", "/api/playlist", "/api/search", "/api/suggestions", "/api/song", "/api/watch", "/api/lyrics"],
-            "auth": ["/api/user/liked", "/api/user/playlists", "/api/user/artists", "/api/user/history"]
-        }
+        "service": "YT Music Suite API (India)"
     })
 
+# 1. User Liked Songs (Dual Strategy: get_liked_songs fallback to get_playlist('LM'))
+@app.route("/api/user/liked")
+def user_liked_songs():
+    yt = get_yt_client()
+    try:
+        # Method 1: standard liked songs
+        data = yt.get_liked_songs(limit=50)
+        tracks = [parse_item(t) for t in data.get("tracks", []) if parse_item(t)]
+        return jsonify({"title": "Aapke Liked Gane", "count": len(tracks), "tracks": tracks})
+    except Exception as e1:
+        try:
+            # Method 2: Direct playlist 'LM' (Liked Music) parser bypass
+            data = yt.get_playlist("LM", limit=50)
+            tracks = [parse_item(t) for t in data.get("tracks", []) if parse_item(t)]
+            return jsonify({"title": "Aapke Liked Gane", "count": len(tracks), "tracks": tracks})
+        except Exception as e2:
+            return jsonify({
+                "error": "Session Expired or Invalid Cookie",
+                "hint": "Google cookies expire periodically. Refresh cookie or check SAPISID.",
+                "details": str(e2)
+            }), 401
+
+# 2. User Playlists
+@app.route("/api/user/playlists")
+def user_library_playlists():
+    yt = get_yt_client()
+    try:
+        playlists = yt.get_library_playlists(limit=50)
+        return jsonify([parse_item(p) for p in playlists if parse_item(p)])
+    except Exception as e:
+        return jsonify({"error": "Login failed", "details": str(e)}), 401
+
+# 3. User Artists
+@app.route("/api/user/artists")
+def user_library_artists():
+    yt = get_yt_client()
+    try:
+        artists = yt.get_library_subscriptions(limit=50)
+        return jsonify([parse_item(a) for a in artists if parse_item(a)])
+    except Exception as e:
+        return jsonify({"error": "Login failed", "details": str(e)}), 401
+
+# 4. User History
+@app.route("/api/user/history")
+def user_history():
+    yt = get_yt_client()
+    try:
+        history = yt.get_history()
+        return jsonify([parse_item(h) for h in history if parse_item(h)])
+    except Exception as e:
+        return jsonify({"error": "Login failed", "details": str(e)}), 401
+
 # ==========================================
-# PUBLIC ENDPOINTS
+# PUBLIC ROUTES
 # ==========================================
 
 @app.route("/api/home/full")
@@ -243,47 +293,6 @@ def get_lyrics():
     except Exception:
         pass
     return jsonify({"status": "not_found", "message": "Lyrics not available"})
-
-# ==========================================
-# AUTHENTICATED USER ENDPOINTS
-# ==========================================
-
-@app.route("/api/user/liked")
-def user_liked_songs():
-    yt = get_yt_client()
-    try:
-        data = yt.get_liked_songs(limit=50)
-        tracks = [parse_item(t) for t in data.get("tracks", []) if parse_item(t)]
-        return jsonify({"title": "Aapke Liked Gane", "count": len(tracks), "tracks": tracks})
-    except Exception as e:
-        return jsonify({"error": "Login required", "details": str(e)}), 401
-
-@app.route("/api/user/playlists")
-def user_library_playlists():
-    yt = get_yt_client()
-    try:
-        playlists = yt.get_library_playlists(limit=50)
-        return jsonify([parse_item(p) for p in playlists if parse_item(p)])
-    except Exception as e:
-        return jsonify({"error": "Login required", "details": str(e)}), 401
-
-@app.route("/api/user/artists")
-def user_library_artists():
-    yt = get_yt_client()
-    try:
-        artists = yt.get_library_subscriptions(limit=50)
-        return jsonify([parse_item(a) for a in artists if parse_item(a)])
-    except Exception as e:
-        return jsonify({"error": "Login required", "details": str(e)}), 401
-
-@app.route("/api/user/history")
-def user_history():
-    yt = get_yt_client()
-    try:
-        history = yt.get_history()
-        return jsonify([parse_item(h) for h in history if parse_item(h)])
-    except Exception as e:
-        return jsonify({"error": "Login required", "details": str(e)}), 401
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
