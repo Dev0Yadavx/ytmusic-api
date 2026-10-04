@@ -42,7 +42,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YT Music Suite - Vercel Live</title>
+    <title>YT Music Suite - All 10 Endpoints</title>
     <style>
         :root {
             --pink-neon: #ff2a85;
@@ -102,37 +102,45 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="liquid-blob-2"></div>
     <header class="glass-panel">
         <div class="brand-title"><span class="pink">&#9658; YT</span><span class="yellow">Music Suite</span></div>
-        <button class="btn-action-all" onclick="runAllEndpoints()">&#9654; Test All</button>
+        <button class="btn-action-all" onclick="runAllEndpoints()">&#9654; Test All (10)</button>
     </header>
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('endpoints')">API Playground</button>
-        <button class="tab-btn" onclick="switchTab('web')">Web JS SDK</button>
+        <button class="tab-btn active" onclick="switchTab('endpoints')">API Playground (10)</button>
         <button class="tab-btn" onclick="switchTab('android')">Android Kotlin SDK</button>
+        <button class="tab-btn" onclick="switchTab('web')">Web JS/TS SDK</button>
+        <button class="tab-btn" onclick="switchTab('flutter')">Flutter Dart SDK</button>
     </div>
     <div class="app-content">
         <div id="view-endpoints" style="display:flex; flex-direction:column; gap:14px;">
             <div class="glass-panel banner-card">
                 <div>
-                    <h4 style="font-size:13px;">Vercel Serverless Ready</h4>
-                    <p style="font-size:11px; color:var(--text-sub);">Tap any endpoint path to copy URL</p>
+                    <h4 style="font-size:13px;">All 10 Endpoints Active</h4>
+                    <p style="font-size:11px; color:var(--text-sub);">Single tap to copy URL, cURL, or raw response</p>
                 </div>
-                <button class="glass-btn" style="padding:6px 14px;" onclick="copyAllUrls()">Copy All URLs</button>
+                <button class="glass-btn" style="padding:6px 14px;" onclick="copyAllUrls()">Copy All 10 URLs</button>
             </div>
             <div id="endpointsList" style="display:flex; flex-direction:column; gap:14px;"></div>
         </div>
+        <div id="view-android" style="display:none; flex-direction:column; gap:12px;">
+            <div class="glass-panel banner-card">
+                <div><h4 style="font-size:13px;">Android Retrofit SDK (10 Endpoints)</h4><p style="font-size:11px; color:var(--text-sub);">Full Kotlin Coroutines Interface & Data Models</p></div>
+                <button class="glass-btn" style="padding:6px 14px;" onclick="copyCode('androidSdkCode', 'Android Kotlin SDK (10 Endpoints) Copied!')">Copy Kotlin SDK</button>
+            </div>
+            <div class="code-block" id="androidSdkCode"></div>
+        </div>
         <div id="view-web" style="display:none; flex-direction:column; gap:12px;">
             <div class="glass-panel banner-card">
-                <div><h4 style="font-size:13px;">Web SDK</h4><p style="font-size:11px; color:var(--text-sub);">Frontend ES6 Module</p></div>
-                <button class="glass-btn" style="padding:6px 14px;" onclick="copyCode('webSdkCode', 'Web JS SDK Copied!')">Copy SDK</button>
+                <div><h4 style="font-size:13px;">Web JS/TS SDK (10 Endpoints)</h4><p style="font-size:11px; color:var(--text-sub);">ES6 Class for React, Vue, Next.js</p></div>
+                <button class="glass-btn" style="padding:6px 14px;" onclick="copyCode('webSdkCode', 'Web JS SDK (10 Endpoints) Copied!')">Copy Web SDK</button>
             </div>
             <div class="code-block" id="webSdkCode"></div>
         </div>
-        <div id="view-android" style="display:none; flex-direction:column; gap:12px;">
+        <div id="view-flutter" style="display:none; flex-direction:column; gap:12px;">
             <div class="glass-panel banner-card">
-                <div><h4 style="font-size:13px;">Android Retrofit SDK</h4><p style="font-size:11px; color:var(--text-sub);">Kotlin Models & Coroutines</p></div>
-                <button class="glass-btn" style="padding:6px 14px;" onclick="copyCode('androidSdkCode', 'Android Kotlin SDK Copied!')">Copy SDK</button>
+                <div><h4 style="font-size:13px;">Flutter Dart SDK (10 Endpoints)</h4><p style="font-size:11px; color:var(--text-sub);">Cross-platform client class</p></div>
+                <button class="glass-btn" style="padding:6px 14px;" onclick="copyCode('flutterSdkCode', 'Flutter Dart SDK (10 Endpoints) Copied!')">Copy Flutter SDK</button>
             </div>
-            <div class="code-block" id="androidSdkCode"></div>
+            <div class="code-block" id="flutterSdkCode"></div>
         </div>
     </div>
     <div class="live-player">
@@ -143,16 +151,16 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <script>
         const BASE = window.location.origin;
         const ENDPOINTS = [
-            { id: "home_full", name: "Full Home Screen Engine", path: "/api/home/full?country=IN", badge: "GET", desc: "Quick Picks, Carousels, Trending Videos & Artists" },
-            { id: "charts", name: "India Charts & Top 100", path: "/api/charts?country=IN", badge: "GET", desc: "Official viral music and top 100 songs in India" },
-            { id: "search", name: "Search Songs & Remixes", path: "/api/search?q=Bhojpuri%20Song&filter=songs", badge: "GET", desc: "Songs search with spelling tolerance" },
-            { id: "suggestions", name: "Instant Autocomplete", path: "/api/suggestions?q=Arijit", badge: "GET", desc: "Real-time search suggestions" },
-            { id: "moods", name: "Explore Moods & Genres", path: "/api/moods", badge: "GET", desc: "Browse categories like Chill, Workout, Party, Romance" },
-            { id: "song", name: "Song Metadata", path: "/api/song?id=kJQP7kiw5Fk", badge: "GET", desc: "Length, title, views, author and audio formats" },
-            { id: "watch", name: "Radio Queue / Continuous Mix", path: "/api/watch?id=kJQP7kiw5Fk", badge: "GET", desc: "Automated continuous radio queue based on track" },
-            { id: "lyrics", name: "Lyrics Summary", path: "/api/lyrics?id=kJQP7kiw5Fk", badge: "GET", desc: "Lyrics availability and summary snippet" },
-            { id: "stream", name: "Audio Stream URL Resolver", path: "/api/stream?id=kJQP7kiw5Fk", badge: "GET", desc: "Direct audio playback URL" },
-            { id: "refresh", name: "Session Cache Refresh", path: "/api/refresh", badge: "POST", desc: "Flushes session cache and resets connection" }
+            { id: "home_full", name: "1. Full Home Screen Engine", path: "/api/home/full?country=IN", badge: "GET", desc: "Quick Picks, Carousels, Trending Videos, Artists & Mood Chips" },
+            { id: "charts", name: "2. India Charts & Top 100", path: "/api/charts?country=IN", badge: "GET", desc: "Official viral music and top 100 songs in India" },
+            { id: "search", name: "3. Search Songs & Playlists", path: "/api/search?q=Bhojpuri%20Song&filter=songs", badge: "GET", desc: "Songs search with spelling tolerance" },
+            { id: "suggestions", name: "4. Search Autocomplete", path: "/api/suggestions?q=Arijit", badge: "GET", desc: "Real-time search suggestions" },
+            { id: "moods", name: "5. Explore Moods & Genres", path: "/api/moods", badge: "GET", desc: "Browse categories like Chill, Workout, Party, Romance" },
+            { id: "song", name: "6. Song Info & Metadata", path: "/api/song?id=kJQP7kiw5Fk", badge: "GET", desc: "Length, title, views, author and audio formats" },
+            { id: "watch", name: "7. Radio Queue / Continuous Mix", path: "/api/watch?id=kJQP7kiw5Fk", badge: "GET", desc: "Automated continuous radio queue based on track" },
+            { id: "lyrics", name: "8. Lyrics Summary", path: "/api/lyrics?id=kJQP7kiw5Fk", badge: "GET", desc: "Lyrics availability and summary snippet" },
+            { id: "stream", name: "9. Audio Stream URL Resolver", path: "/api/stream?id=kJQP7kiw5Fk", badge: "GET", desc: "Direct audio playback URL via yt-dlp" },
+            { id: "refresh", name: "10. Session Cache Refresh", path: "/api/refresh", badge: "POST", desc: "Flushes session cache and resets connection" }
         ];
 
         function renderCards() {
@@ -212,13 +220,13 @@ HTML_PAGE = r"""<!DOCTYPE html>
         }
 
         async function runAllEndpoints() {
-            showToast("Testing all endpoints...");
+            showToast("Testing all 10 endpoints...");
             for(let i=0; i<ENDPOINTS.length; i++) await testEndpoint(i);
-            showToast("All tests completed!");
+            showToast("All 10 tests completed!");
         }
 
         function copyAllUrls() {
-            copySafe(ENDPOINTS.map(e => `${e.badge} ${BASE}${e.path}`).join('\n'), "All URLs Copied!");
+            copySafe(ENDPOINTS.map(e => `${e.badge} ${BASE}${e.path}`).join('\n'), "All 10 URLs Copied!");
         }
 
         function copyCode(id, msg) { copySafe(document.getElementById(id).innerText, msg); }
@@ -246,44 +254,223 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            ['endpoints', 'web', 'android'].forEach(v => document.getElementById(`view-${v}`).style.display = 'none');
+            ['endpoints', 'android', 'web', 'flutter'].forEach(v => document.getElementById(`view-${v}`).style.display = 'none');
             if(tab === 'endpoints') { document.querySelectorAll('.tab-btn')[0].classList.add('active'); document.getElementById('view-endpoints').style.display = 'flex'; }
-            else if(tab === 'web') { document.querySelectorAll('.tab-btn')[1].classList.add('active'); document.getElementById('view-web').style.display = 'flex'; }
-            else { document.querySelectorAll('.tab-btn')[2].classList.add('active'); document.getElementById('view-android').style.display = 'flex'; }
+            else if(tab === 'android') { document.querySelectorAll('.tab-btn')[1].classList.add('active'); document.getElementById('view-android').style.display = 'flex'; }
+            else if(tab === 'web') { document.querySelectorAll('.tab-btn')[2].classList.add('active'); document.getElementById('view-web').style.display = 'flex'; }
+            else { document.querySelectorAll('.tab-btn')[3].classList.add('active'); document.getElementById('view-flutter').style.display = 'flex'; }
         }
 
-        document.getElementById("webSdkCode").innerText = `// Universal Web SDK (ES6)
-export class YTMusicClient {
-    constructor(baseURL = "${BASE}") { this.baseURL = baseURL.replace(/\\/$/, ""); }
-    async _get(path) {
-        const res = await fetch(\`\${this.baseURL}\${path}\`);
-        if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-        return await res.json();
-    }
-    getFullHomeScreen(country = "IN") { return this._get(\`/api/home/full?country=\${country}\`); }
-    getCharts(country = "IN") { return this._get(\`/api/charts?country=\${country}\`); }
-    search(query, filter = "songs") { return this._get(\`/api/search?q=\${encodeURIComponent(query)}&filter=\${filter}\`); }
-    getSuggestions(query) { return this._get(\`/api/suggestions?q=\${encodeURIComponent(query)}\`); }
-    getStream(videoId) { return this._get(\`/api/stream?id=\${videoId}\`); }
-}`;
-
-        document.getElementById("androidSdkCode").innerText = `// Android Kotlin Retrofit Client
+        // 1. Android Retrofit SDK (Complete 10 Endpoints)
+        document.getElementById("androidSdkCode").innerText = `// Android Kotlin Retrofit Client (All 10 Endpoints)
 package com.ytmusic.client
+
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.Response
 
 interface YTMusicService {
+    // 1. Full Home Screen Engine
     @GET("/api/home/full")
-    suspend fun getFullHomeScreen(@Query("country") country: String = "IN"): Response<Any>
+    suspend fun getFullHomeScreen(
+        @Query("country") country: String = "IN"
+    ): Response<HomeScreenResponse>
+
+    // 2. Charts & Trending
     @GET("/api/charts")
-    suspend fun getCharts(@Query("country") country: String = "IN"): Response<Any>
+    suspend fun getCharts(
+        @Query("country") country: String = "IN"
+    ): Response<Any>
+
+    // 3. Search Songs & Playlists
     @GET("/api/search")
-    suspend fun searchSongs(@Query("q") query: String, @Query("filter") filter: String = "songs"): Response<List<Any>>
+    suspend fun search(
+        @Query("q") query: String,
+        @Query("filter") filter: String = "songs"
+    ): Response<List<TrackItem>>
+
+    // 4. Instant Autocomplete
     @GET("/api/suggestions")
-    suspend fun getSuggestions(@Query("q") query: String): Response<List<String>>
+    suspend fun getSuggestions(
+        @Query("q") query: String
+    ): Response<List<String>>
+
+    // 5. Explore Moods & Genres
+    @GET("/api/moods")
+    suspend fun getMoodCategories(): Response<Any>
+
+    // 6. Song Metadata & Details
+    @GET("/api/song")
+    suspend fun getSongDetails(
+        @Query("id") videoId: String
+    ): Response<Any>
+
+    // 7. Radio Queue / Watch Playlist
+    @GET("/api/watch")
+    suspend fun getRadioQueue(
+        @Query("id") videoId: String
+    ): Response<Any>
+
+    // 8. Lyrics Summary
+    @GET("/api/lyrics")
+    suspend fun getLyrics(
+        @Query("id") videoId: String
+    ): Response<LyricsResponse>
+
+    // 9. Audio Stream URL Resolver
     @GET("/api/stream")
-    suspend fun getStreamUrl(@Query("id") videoId: String): Response<Any>
+    suspend fun getStreamUrl(
+        @Query("id") videoId: String
+    ): Response<StreamResponse>
+
+    // 10. Cache & Session Refresh
+    @POST("/api/refresh")
+    suspend fun refreshSession(): Response<StatusResponse>
+}
+
+// Data Models
+data class HomeScreenResponse(val status: String, val header_chips: List<HeaderChip>, val sections: List<HomeSection>)
+data class HeaderChip(val label: String, val params: String)
+data class HomeSection(val section_id: String, val title: String, val layout: String, val items: List<TrackItem>)
+data class TrackItem(val id: String, val title: String, val subtitle: String, val thumbnail: String, val type: String)
+data class StreamResponse(val videoId: String, val stream_url: String)
+data class LyricsResponse(val status: String, val lyrics: String?)
+data class StatusResponse(val status: String, val message: String)`;
+
+        // 2. Web JS/TS SDK (Complete 10 Endpoints)
+        document.getElementById("webSdkCode").innerText = `// Universal Web SDK (ES6 Class - All 10 Endpoints)
+export class YTMusicClient {
+    constructor(baseURL = "${BASE}") {
+        this.baseURL = baseURL.replace(/\\/$/, "");
+    }
+
+    async _request(path, method = "GET") {
+        const res = await fetch(\`\${this.baseURL}\${path}\`, { method });
+        if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+        return await res.json();
+    }
+
+    // 1. Full Home Screen
+    getFullHomeScreen(country = "IN") {
+        return this._request(\`/api/home/full?country=\${country}\`);
+    }
+
+    // 2. Charts
+    getCharts(country = "IN") {
+        return this._request(\`/api/charts?country=\${country}\`);
+    }
+
+    // 3. Search
+    search(query, filter = "songs") {
+        return this._request(\`/api/search?q=\${encodeURIComponent(query)}&filter=\${filter}\`);
+    }
+
+    // 4. Suggestions
+    getSuggestions(query) {
+        return this._request(\`/api/suggestions?q=\${encodeURIComponent(query)}\`);
+    }
+
+    // 5. Moods & Genres
+    getMoodCategories() {
+        return this._request('/api/moods');
+    }
+
+    // 6. Song Details
+    getSong(videoId) {
+        return this._request(\`/api/song?id=\${videoId}\`);
+    }
+
+    // 7. Watch Playlist / Radio Queue
+    getRadioQueue(videoId) {
+        return this._request(\`/api/watch?id=\${videoId}\`);
+    }
+
+    // 8. Lyrics
+    getLyrics(videoId) {
+        return this._request(\`/api/lyrics?id=\${videoId}\`);
+    }
+
+    // 9. Audio Stream URL
+    getStream(videoId) {
+        return this._request(\`/api/stream?id=\${videoId}\`);
+    }
+
+    // 10. Session Refresh
+    refreshSession() {
+        return this._request('/api/refresh', 'POST');
+    }
+}`;
+
+        // 3. Flutter Dart SDK (Complete 10 Endpoints)
+        document.getElementById("flutterSdkCode").innerText = `// Flutter Dart Client SDK (All 10 Endpoints)
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class YTMusicClient {
+  final String baseUrl;
+  YTMusicClient({this.baseUrl = "${BASE}"});
+
+  // 1. Full Home Screen
+  Future<Map<String, dynamic>> getFullHomeScreen({String country = "IN"}) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/home/full?country=$country'));
+    return jsonDecode(res.body);
+  }
+
+  // 2. Charts
+  Future<dynamic> getCharts({String country = "IN"}) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/charts?country=$country'));
+    return jsonDecode(res.body);
+  }
+
+  // 3. Search
+  Future<List<dynamic>> search(String query, {String filter = "songs"}) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/search?q=\${Uri.encodeComponent(query)}&filter=$filter'));
+    return jsonDecode(res.body);
+  }
+
+  // 4. Autocomplete Suggestions
+  Future<List<String>> getSuggestions(String query) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/suggestions?q=\${Uri.encodeComponent(query)}'));
+    return List<String>.from(jsonDecode(res.body));
+  }
+
+  // 5. Moods & Genres
+  Future<dynamic> getMoodCategories() async {
+    final res = await http.get(Uri.parse('$baseUrl/api/moods'));
+    return jsonDecode(res.body);
+  }
+
+  // 6. Song Metadata
+  Future<dynamic> getSong(String videoId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/song?id=$videoId'));
+    return jsonDecode(res.body);
+  }
+
+  // 7. Radio Queue
+  Future<dynamic> getRadioQueue(String videoId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/watch?id=$videoId'));
+    return jsonDecode(res.body);
+  }
+
+  // 8. Lyrics
+  Future<Map<String, dynamic>> getLyrics(String videoId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/lyrics?id=$videoId'));
+    return jsonDecode(res.body);
+  }
+
+  // 9. Direct Audio Stream
+  Future<String> getAudioStreamUrl(String videoId) async {
+    final res = await http.get(Uri.parse('$baseUrl/api/stream?id=$videoId'));
+    final data = jsonDecode(res.body);
+    return data['stream_url'] ?? '';
+  }
+
+  // 10. Cache Refresh
+  Future<Map<String, dynamic>> refreshSession() async {
+    final res = await http.post(Uri.parse('$baseUrl/api/refresh'));
+    return jsonDecode(res.body);
+  }
 }`;
 
         renderCards();
@@ -487,7 +674,5 @@ def refresh_session():
     yt = YTMusic()
     return jsonify({"status": "success", "message": "Guest session refreshed"})
 
-# Vercel Serverless Entry Point
-# (Vercel looks for 'app' directly)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
